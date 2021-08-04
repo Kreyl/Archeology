@@ -1,0 +1,5 @@
+ArcheSword_hw/ArcheSword-backups/
+*.fsx
+*.fsproj
+*.dsn
+*.fsxview
