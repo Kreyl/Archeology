@@ -6,32 +6,25 @@
  */
 
 #include "cc1101.h"
-#include "uart.h"
+#include "uartG070.h"
 
 #define CC_MAX_BAUDRATE_HZ  6500000
 
-extern cc1101_t CC;
+thread_reference_t ThdRef;
 
-void CCIrqHandler() { CC.IIrqHandler(); }
+void CCIrqHandler(RiseFall_t RiseFall) { chThdResumeI(&ThdRef, MSG_OK); } // NotNull check perfprmed inside chThdResumeI
 
 uint8_t cc1101_t::Init() {
     // ==== GPIO ====
-#if defined STM32L1XX || defined STM32F4XX || defined STM32L4XX
-    AlterFunc_t CC_AF;
-    if(ISpi.PSpi == SPI1 or ISpi.PSpi == SPI2) CC_AF = AF5;
-    else CC_AF = AF6;
-#elif defined STM32F030 || defined STM32F0
-#define CC_AF   AF0
-#endif
     PinSetupOut      ((GPIO_TypeDef*)CSGpio, Cs,   omPushPull);
-    PinSetupAlterFunc((GPIO_TypeDef*)SpiGpio, Sck,  omPushPull, pudNone, CC_AF);
-    PinSetupAlterFunc((GPIO_TypeDef*)SpiGpio, Miso, omPushPull, pudNone, CC_AF);
-    PinSetupAlterFunc((GPIO_TypeDef*)SpiGpio, Mosi, omPushPull, pudNone, CC_AF);
-    IGdo0.Init(ttFalling);
+    PinSetupAlterFunc((GPIO_TypeDef*)SpiGpio, Sck,  omPushPull, pudNone, AF1);
+    PinSetupAlterFunc((GPIO_TypeDef*)SpiGpio, Miso, omPushPull, pudNone, AF4);
+    PinSetupAlterFunc((GPIO_TypeDef*)SpiGpio, Mosi, omPushPull, pudNone, AF1);
+    IGdo0.Init(risefallFalling);
     CsHi();
     // ==== SPI ====
     // MSB first, master, ClkLowIdle, FirstEdge, Baudrate no more than 6.5MHz
-    ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, CC_MAX_BAUDRATE_HZ);
+    ISpi.Setup(boMSB, cpolIdleLow, cphaFirstEdge, CC_MAX_BAUDRATE_HZ, bitn8);
     ISpi.Enable();
     // ==== Init CC ====
     if(Reset() != retvOk) {
@@ -139,11 +132,14 @@ void cc1101_t::Transmit(void *Ptr, uint8_t Len) {
 
 // Enter RX mode and wait reception for Timeout_ms.
 uint8_t cc1101_t::Receive(uint32_t Timeout_ms, void *Ptr, uint8_t Len, int8_t *PRssi) {
-//    Recalibrate();
+    return Receive_st(TIME_MS2I(Timeout_ms), Ptr, Len, PRssi);
+}
+
+uint8_t cc1101_t::Receive_st(sysinterval_t Timeout_st, void *Ptr, uint8_t Len, int8_t *PRssi) {
     FlushRxFIFO();
     chSysLock();
     EnterRX();
-    msg_t Rslt = chThdSuspendTimeoutS(&ThdRef, TIME_MS2I(Timeout_ms));    // Wait IRQ
+    msg_t Rslt = chThdSuspendTimeoutS(&ThdRef, Timeout_st);    // Wait IRQ
     chSysUnlock();  // Will be here when IRQ will fire, or timeout occur - with appropriate message
 
     if(Rslt == MSG_TIMEOUT) {   // Nothing received, timeout occured

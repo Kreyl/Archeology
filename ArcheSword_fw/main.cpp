@@ -7,6 +7,8 @@
 #include "shell.h"
 #include "Effects.h"
 #include "MsgQ.h"
+#include "radio_lvl1.h"
+#include "ChunkTypes.h"
 
 #if 1 // ======================== Variables & prototypes =======================
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -16,6 +18,13 @@ CmdUart_t Uart{&CmdUartParams};
 void ClockInit();
 void ITask();
 
+static TmrKL_t TmrOneSecond {TIME_MS2I(999), evtIdEverySecond, tktPeriodic};
+uint32_t RxTimeout = 0;
+
+static LedRGBChunk_t lsq[2] = {
+        {csSetup, 0, clBlue},
+        {csEnd},
+};
 #endif
 
 int main(void) {
@@ -44,6 +53,9 @@ int main(void) {
 //    else Led.StartOrRestart(lsqFailure);
 //    chThdSleepMilliseconds(1008);
 
+    Radio.Init(); // XXX
+
+    TmrOneSecond.StartOrRestart();
     // Main cycle
     ITask();
 }
@@ -53,6 +65,23 @@ void ITask() {
     while(true) {
         EvtMsg_t Msg = EvtQMain.Fetch(TIME_INFINITE);
         switch(Msg.ID) {
+            case evtIdEverySecond:
+                Iwdg::Reload();
+                RxTimeout++;
+//                if(RxTimeout > 4) {
+//                    if((RxTimeout % 3) == 0) Led.StartOrRestart(lsqHeartBeat);
+//                }
+                break;
+
+            case evtIdRadioCmd: {
+                RxTimeout = 0;
+                Color_t Clr;
+                Clr.DWord32 = (uint32_t)Msg.Value;
+                if(lsq[0].Color != Clr) {
+                    lsq[0].Color = Clr;
+//                    Led.StartOrRestart(lsq);
+                }
+            } break;
 
             case evtIdShellCmd:
                 while(((CmdUart_t*)Msg.Ptr)->GetRcvdCmd() == retvOk) OnCmd((Shell_t*)((CmdUart_t*)Msg.Ptr));

@@ -364,6 +364,7 @@ ftVoidRiseFall ExtiIrqHandler_0_1, ExtiIrqHandler_2_3, ExtiIrqHandler_4_15;
 
 void STM32_EXTI0_1_HANDLER() {
     OSAL_IRQ_PROLOGUE();
+    chSysLockFromISR();
     RiseFall_t RiseFall = risefallNone;
     if(EXTI->RPR1 & 0b11UL) {
         EXTI->RPR1 = 0b11UL;
@@ -374,11 +375,13 @@ void STM32_EXTI0_1_HANDLER() {
         RiseFall = (RiseFall == risefallRising)? risefallBoth : risefallFalling;
     }
     if(ExtiIrqHandler_0_1 != nullptr) ExtiIrqHandler_0_1(RiseFall);
+    chSysUnlockFromISR();
     OSAL_IRQ_EPILOGUE();
 }
 
 void STM32_EXTI2_3_HANDLER() {
     OSAL_IRQ_PROLOGUE();
+    chSysLockFromISR();
     RiseFall_t RiseFall = risefallNone;
     if(EXTI->RPR1 & 0b1100UL) {
         EXTI->RPR1 = 0b1100UL;
@@ -389,11 +392,13 @@ void STM32_EXTI2_3_HANDLER() {
         RiseFall = (RiseFall == risefallRising)? risefallBoth : risefallFalling;
     }
     if(ExtiIrqHandler_2_3 != nullptr) ExtiIrqHandler_2_3(RiseFall);
+    chSysUnlockFromISR();
     OSAL_IRQ_EPILOGUE();
 }
 
 void STM32_EXTI4_15_HANDLER() {
     OSAL_IRQ_PROLOGUE();
+    chSysLockFromISR();
     RiseFall_t RiseFall = risefallNone;
     if(EXTI->RPR1 & 0xFFF0) {
         EXTI->RPR1 = 0xFFF0;
@@ -404,6 +409,7 @@ void STM32_EXTI4_15_HANDLER() {
         RiseFall = (RiseFall == risefallRising)? risefallBoth : risefallFalling;
     }
     if(ExtiIrqHandler_4_15 != nullptr) ExtiIrqHandler_4_15(RiseFall);
+    chSysUnlockFromISR();
     OSAL_IRQ_EPILOGUE();
 }
 

@@ -16,12 +16,5 @@ enum EvtMsgId_t {
     evtIdAdcRslt,
 
     // Not eternal
-    evtIdStateEnd,
-    evtIdWave0,
-    evtIdWave1,
-    evtIdKnock,
-    evtIdPress,
-
-    evtIdTimeToSave,
-    evtIdTimeToFlare,
+    evtIdRadioCmd,
 };

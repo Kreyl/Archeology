@@ -20,6 +20,13 @@ typedef void (*ftVoidVoid)(void);
 typedef void (*ftVoidPVoid)(void*p);
 typedef void (*ftVoidPVoidW32)(void*p, uint32_t W32);
 
+// Virtual class for IRQ handlers and timer callbacks
+class IrqHandler_t {
+public:
+    virtual void IIrqHandler() = 0;
+};
+
+
 void Printf(const char *format, ...);
 
 #ifndef countof
