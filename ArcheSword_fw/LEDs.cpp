@@ -31,7 +31,6 @@ __attribute__((aligned))
 static uint8_t BrtBuf[LED_CHNL_CNT] = { 0 };
 
 uint8_t CurrentBrt = 255;
-PinOutputPWM_t Dimmer(OUT_EN_PIN, LEDS_DIM_TIM, LEDS_DIM_CHNL, invInverted, omPushPull, 254);
 static volatile bool NewPicIsReady = false;
 #endif
 
@@ -44,18 +43,14 @@ struct RawBuf_t {
     void Reset() {
         ReadBuf = Buf1;
         for(uint32_t i=0; i<LED_RAWBUF_CNT16; i++) {
-//            Buf1[i] = 0xFFFF;
-            Buf1[i] = (i & 1)? 0xFFFF : 0xFFFF;
-            Buf2[i] = 0xFFFF;
+            Buf1[i] = 0;
+            Buf2[i] = 0;
         }
     }
     uint16_t* GetWriteBuf() { return (ReadBuf == Buf1)? Buf2 : Buf1; }
     void SwitchReadBuf() { ReadBuf = (ReadBuf == Buf1)? Buf2 : Buf1; }
 } RawBuf;
 #endif
-
-static inline void EnableOutput()  { Dimmer.Set(CurrentBrt); }
-static inline void DisableOutput() { Dimmer.Set(0);          }
 
 void LedsDmaIrqHandler(void*p, uint32_t flags) {
 //    DBG_HI();
@@ -76,14 +71,13 @@ void LedsDmaIrqHandler(void*p, uint32_t flags) {
 //    DBG_LO();
 }
 
-namespace Leds {
+namespace ILeds {
+
+void SetBrightness(uint8_t Brt);
 
 void Init() {
 #if 1 // ==== SPI & DMA ====
     RawBuf.Reset();
-    // Dimmer
-    Dimmer.Init();
-    DisableOutput();
     // SPI as I2S to allow 24MHz SPI
     PinSetupAlterFunc(LED_CLK, psHigh);
     PinSetupAlterFunc(LED_DATA, psHigh);
@@ -103,6 +97,10 @@ void Init() {
     ITmr.SetupInput1(0b01, Timer_t::pscDiv1, risefallBoth);
     ITmr.SelectSlaveMode(smExternal); // External clock mode 1
     ITmr.SetTriggerInput(tiTI1FP1);
+    // Output3 is OE
+    PinSetupAlterFunc(OUT_EN_PIN, psLow);
+    ITmr.SetupOutput2(0b0110); // PWM
+    ITmr.EnableCCOutput2();
     // Output4 as latch output
     PinSetupAlterFunc(LATCH_PIN, psLow);
     ITmr.SetTopValue(LEDS_TIM_TOP);
@@ -114,16 +112,16 @@ void Init() {
     ITmr.SetCCR3(LEDS_TIM_TOP - LEDS_TIM_SHIFT + LEDS_TIM_PULSE_LEN); // When set Lo
     ITmr.Enable();
 #endif
-    EnableOutput();
     DispSpi.Enable();
+    SetBrightness(255);
 }
 
 void SetBrightness(uint8_t Brt) {
     CurrentBrt = Brt;
-    Dimmer.Set(Brt);
+    ITmr.SetCCR2(4); // XXX
 }
 
-static uint32_t Real2NLedTbl[LED_CNT] = {0, 1, 3, 5, 6, 2, 4};
+static uint32_t Real2NLedTbl[LED_CNT] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
 
 void ShowPic(Color_t *PClr) {
     NewPicIsReady = false;
@@ -160,7 +158,7 @@ void ShowPic(Color_t *PClr) {
             if(*PSrc++ >= brt) w |= (1<<13);
             if(*PSrc++ >= brt) w |= (1<<14);
             if(*PSrc++ >= brt) w |= (1<<15);
-            w ^= 0xFFFF;
+//            w ^= 0xFFFF;
             *pDst-- = w;
         } // for N
         pDst += (1 + LED_WORD_CNT + (LED_WORD_CNT - 1)); // Eliminate last --, move to next part, move to last element of next part
@@ -171,3 +169,12 @@ void ShowPic(Color_t *PClr) {
 }
 
 } // Namespace
+
+void LedsAllSeq_t::Init() {
+    ILeds::Init();
+}
+
+void LedsAllSeq_t::SetColor(Color_t AColor) {
+    for(uint32_t i=0; i<LED_CNT; i++) IPic[i] = AColor;
+    ILeds::ShowPic(IPic);
+}

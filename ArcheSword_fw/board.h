@@ -42,15 +42,15 @@
 
 // LEDs
 #define TIMESLOT_TOP    255UL
-#define OUT_EN_PIN      GPIOA, 7, AF4 // XXX
+#define OUT_EN_PIN      GPIOA, 7, omPushPull, pudNone, AF1
 #define LATCH_TMR       TIM3
 #define LEDS_SPI        SPI1
 #define LATCH_TMR_IN    GPIOB, 4, omPushPull, pudPullDown, AF1
 #define LATCH_PIN       GPIOB, 1, omPushPull, pudNone, AF1
 #define LED_DATA        GPIOB, 5, omPushPull, pudNone, AF0
 #define LED_CLK         GPIOB, 3, omPushPull, pudNone, AF0
-#define LED_PWR_CTRL    GPIOB, 9, omPushPull
-#define DRV_PWR_CTRL    GPIOC, 14, omPushPull
+#define LED_PWR_CTRL    GPIOB, 9
+#define DRV_PWR_CTRL    GPIOC, 14
 
 // Radio: SPI, PGpio, Sck, Miso, Mosi, Cs, Gdo0
 #define CC_Setup0       SPI2, GPIOB, 8,6,7, GPIOA,15, GPIOB,2
@@ -80,9 +80,6 @@
 #if 1 // =========================== Timers ====================================
 #define LEDS_TIM        TIM3
 #define LEDS_TIM_IRQ_VECTOR TIM3_IRQHandler
-
-#define LEDS_DIM_TIM    TIM14
-#define LEDS_DIM_CHNL   1
 
 #define TIME_TIMER      TIM7
 #define ADC_TIMER       TIM6

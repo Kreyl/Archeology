@@ -125,10 +125,14 @@ void PinOutputPWM_t::Init() const {
 // Universal VirtualTimer callback
 void TmrKLCallback(void *p) {
     chSysLockFromISR();
-    TmrKL_t* PTmr = (TmrKL_t*)p;
-    EvtQMain.SendNowOrExitI(EvtMsg_t(PTmr->EvtId));
-    if(PTmr->TmrType == tktPeriodic) PTmr->StartOrRestartI();
+    ((IrqHandler_t*)p)->IIrqHandler();
     chSysUnlockFromISR();
+}
+
+void TmrKL_t::IIrqHandler() {    // Call it inside callback
+    EvtMsg_t Msg(EvtId);
+    EvtQMain.SendNowOrExitI(Msg);
+    if(TmrType == tktPeriodic) StartOrRestartI();
 }
 #endif
 

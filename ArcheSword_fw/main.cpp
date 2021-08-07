@@ -3,12 +3,12 @@
 #include "ch.h"
 #include "hal.h"
 #include "uartG070.h"
+#include "color.h"
 #include "LEDs.h"
 #include "shell.h"
-#include "Effects.h"
 #include "MsgQ.h"
 #include "radio_lvl1.h"
-#include "ChunkTypes.h"
+#include "Sequences.h"
 
 #if 1 // ======================== Variables & prototypes =======================
 EvtMsgQ_t<EvtMsg_t, MAIN_EVT_Q_LEN> EvtQMain;
@@ -25,11 +25,13 @@ static LedRGBChunk_t lsq[2] = {
         {csSetup, 0, clBlue},
         {csEnd},
 };
+
+LedsAllSeq_t Leds;
 #endif
 
 int main(void) {
     ClockInit();
-    // Start Watchdog. Will reset in main thread by periodic 1 sec events.
+//     Start Watchdog. Will reset in main thread by periodic 1 sec events.
 //    Iwdg::InitAndStart(4500);
 //    Iwdg::DisableInDebug();
 
@@ -43,17 +45,17 @@ int main(void) {
     Uart.Init();
     Printf("\r%S %S\r", APP_NAME, XSTRINGIFY(BUILD_TIME));
 
-//    chThdSleepMilliseconds(9); // Let it rise
-//    Leds::Init();
-
-//    Effects::Init();
+    // Led Pwr
+    PinSetupOut(LED_PWR_CTRL, omPushPull, psLow);
+    PinSetHi(LED_PWR_CTRL);
+    // Leds
+    Leds.Init();
+    Leds.StartOrRestart(lsqStart);
 
     // ==== Radio ====
-//    if(Radio.Init() == retvOk) Led.StartOrRestart(lsqStart);
-//    else Led.StartOrRestart(lsqFailure);
-//    chThdSleepMilliseconds(1008);
-
-    Radio.Init(); // XXX
+    if(Radio.Init() == retvOk) Leds.StartOrRestart(lsqStart);
+    else Leds.StartOrRestart(lsqFailure);
+    chThdSleepMilliseconds(1008);
 
     TmrOneSecond.StartOrRestart();
     // Main cycle

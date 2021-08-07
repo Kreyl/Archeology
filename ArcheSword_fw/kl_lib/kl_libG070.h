@@ -95,10 +95,11 @@ void TmrKLCallback(void *p);    // Universal VirtualTimer callback
 
 enum TmrKLType_t {tktOneShot, tktPeriodic};
 
-class TmrKL_t {
+class TmrKL_t : private IrqHandler_t {
 private:
     virtual_timer_t Tmr;
     sysinterval_t Period;
+    void IIrqHandler();
 public:
     EvtMsgId_t EvtId;
     TmrKLType_t TmrType;

@@ -16,10 +16,15 @@
 #define SHORTPAUSETIME  72
 
 const LedRGBChunk_t lsqStart[] = {
-        {csSetup, 360, clRed},
-        {csWait, 207},
-        {csSetup, 360, {1,0,0}},
+        {csSetup, 180, clRed},
+        {csSetup, 180, clBlack},
+        {csSetup, 180, clGreen},
+        {csSetup, 180, clBlack},
+        {csSetup, 180, clBlue},
+        {csSetup, 180, clBlack},
+        {csSetup, 0, {1,0,0}},
         {csEnd},
+//        {csGoto, 0},
 };
 
 const LedRGBChunk_t lsqHeartBeat[] = {
