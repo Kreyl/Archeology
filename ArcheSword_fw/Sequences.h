@@ -15,21 +15,28 @@
 #define PAUSETIME       720
 #define SHORTPAUSETIME  72
 
+#define SMOOTH          90
+
 const LedRGBChunk_t lsqStart[] = {
-        {csSetup, 180, clRed},
-        {csSetup, 180, clBlack},
-        {csSetup, 180, clGreen},
-        {csSetup, 180, clBlack},
-        {csSetup, 180, clBlue},
-        {csSetup, 180, clBlack},
-        {csSetup, 0, {1,0,0}},
+        {csSetup, SMOOTH, clRed},
+        {csSetup, SMOOTH, clBlack},
+        {csSetup, SMOOTH, clGreen},
+        {csSetup, SMOOTH, clBlack},
+        {csSetup, SMOOTH, clBlue},
+        {csSetup, SMOOTH, clBlack},
+//        {csSetup, 0, {0,1,1}},
         {csEnd},
 //        {csGoto, 0},
 };
 
 const LedRGBChunk_t lsqHeartBeat[] = {
-        {csSetup, 0, {18,0,0}},
-        {csSetup, 540, {1,0,0}},
+        {csSetup, 0, {0,18,18}},
+        {csSetup, 540, {0,1,1}},
+        {csEnd},
+};
+
+const LedRGBChunk_t lsqFadeout[] = {
+        {csSetup, 540, clBlack},
         {csEnd},
 };
 

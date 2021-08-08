@@ -19,10 +19,12 @@ void ClockInit();
 void ITask();
 
 static TmrKL_t TmrOneSecond {TIME_MS2I(999), evtIdEverySecond, tktPeriodic};
-uint32_t RxTimeout = 0;
+static uint32_t RxTimeout = 0;
+static uint8_t OldChnl = 0xFF; // non valid value
 
-static LedRGBChunk_t lsq[2] = {
-        {csSetup, 0, clBlue},
+static LedRGBChunk_t lsq[] = {
+        {csSetup, 0, clBlack},
+        {csSetup, 99, clBlue},
         {csEnd},
 };
 
@@ -70,18 +72,20 @@ void ITask() {
             case evtIdEverySecond:
                 Iwdg::Reload();
                 RxTimeout++;
-//                if(RxTimeout > 4) {
-//                    if((RxTimeout % 3) == 0) Led.StartOrRestart(lsqHeartBeat);
-//                }
+                if(RxTimeout > 4 and !Leds.IsOff()) {
+                    Leds.StartOrRestart(lsqFadeout);
+                }
                 break;
 
             case evtIdRadioCmd: {
                 RxTimeout = 0;
-                Color_t Clr;
-                Clr.DWord32 = (uint32_t)Msg.Value;
-                if(lsq[0].Color != Clr) {
-                    lsq[0].Color = Clr;
-//                    Led.StartOrRestart(lsq);
+                // Show if color has changed
+                if(OldChnl != Msg.ValueID) {
+                    OldChnl = Msg.ValueID;
+                    Color_t Clr;
+                    Clr.DWord32 = (uint32_t)Msg.Value;
+                    lsq[1].Color = Clr;
+                    Leds.StartOrRestart(lsq);
                 }
             } break;
 

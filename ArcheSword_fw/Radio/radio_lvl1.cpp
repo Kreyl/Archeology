@@ -43,12 +43,13 @@ void rLevel1_t::ITask() {
     while(true) {
         CC.Recalibrate();
         if(CC.Receive(RX_TIME_ms, &rPkt, RPKT_LEN, &Rssi) == retvOk) {
-            Printf("%u %u %u; %d\r", rPkt.Clr.R, rPkt.Clr.G, rPkt.Clr.B, Rssi);
+//            Printf("%u %u %u; ch=%u; %d\r", rPkt.Clr.R, rPkt.Clr.G, rPkt.Clr.B, rPkt.Chnl, Rssi);
             SleepTime = SHORT_SLEEP_TIME_ms;
             TryCnt = 0;
             EvtMsg_t Msg;
             Msg.ID = evtIdRadioCmd;
             Msg.Value = (int32_t)rPkt.Clr.DWord32;
+            Msg.ValueID = rPkt.Chnl;
             EvtQMain.SendNowOrExit(Msg);
         }
         else {

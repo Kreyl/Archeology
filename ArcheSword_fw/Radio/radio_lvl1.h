@@ -19,8 +19,10 @@
 #if 1 // =========================== Pkt_t =====================================
 struct rPkt_t  {
     Color_t Clr;
+    uint8_t Chnl;
     rPkt_t& operator = (const rPkt_t &Right) {
         Clr = Right.Clr;
+        Chnl = Right.Chnl;
         return *this;
     }
 //    void Print() { Printf("%d %d %d %d %d %d; %X\r", Ch[0],Ch[1],Ch[2],Ch[3],R1, R2, Btns); }
